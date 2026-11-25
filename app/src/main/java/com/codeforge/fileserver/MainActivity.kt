@@ -13,7 +13,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import java.net.NetworkInterface
+import android.content.Context
 
 class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
@@ -42,7 +42,8 @@ class MainActivity : AppCompatActivity() {
         
         githubTokenInput = EditText(this).apply { 
             hint = "GitHub Token (ghp_...)" 
-            setText(FileServerService.getSavedToken(this))
+            // FIX: Use applicationContext to avoid Type Mismatch
+            setText(FileServerService.getSavedToken(applicationContext))
         }
 
         batteryBtn = Button(this).apply { text = "Ignore Battery Optimization (Do it once)" }
@@ -61,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         startBtn.setOnClickListener { startServer() }
         stopBtn.setOnClickListener { stopServer() }
 
-        if (isServerRunning()) {
+        if (FileServerService.isRunning) {
             startBtn.isEnabled = false
             stopBtn.isEnabled = true
         }
@@ -76,10 +77,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Already optimized!", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun isServerRunning(): Boolean {
-        return FileServerService.isRunning
     }
 
     private fun checkAndRequestPermissions(): Boolean {
@@ -108,7 +105,7 @@ class MainActivity : AppCompatActivity() {
         val port = portInput.text.toString().toIntOrNull() ?: 8080
         val token = githubTokenInput.text.toString().trim()
         
-        FileServerService.saveToken(this, token)
+        FileServerService.saveToken(applicationContext, token)
 
         val intent = Intent(this, FileServerService::class.java).apply {
             putExtra("port", port)
